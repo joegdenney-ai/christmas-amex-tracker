@@ -64,12 +64,13 @@ def index():
 
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT date, description, amount, who FROM purchases ORDER BY id DESC")
+    cur.execute("SELECT id, date, description, amount, who FROM purchases ORDER BY id DESC")
     rows = cur.fetchall()
     conn.close()
 
     purchases = [
         {
+            "id": row["id"],
             "date": row["date"],
             "description": row["description"],
             "amount": row["amount"],
@@ -94,6 +95,16 @@ def index():
         joe_owes=joe_owes,
         kath_owes=kath_owes
     )
+
+@app.post("/delete/<int:purchase_id>")
+def delete_purchase(purchase_id):
+    """Delete a single purchase row and return to the main page."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("index"))
 
 @app.post("/clear")
 def clear_purchases():
