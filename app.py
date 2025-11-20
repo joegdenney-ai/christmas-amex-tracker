@@ -35,6 +35,7 @@ def init_db():
 # Ensure database exists when app starts
 init_db()
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
 
@@ -96,6 +97,7 @@ def index():
         kath_owes=kath_owes
     )
 
+
 @app.post("/delete/<int:purchase_id>")
 def delete_purchase(purchase_id):
     """Delete a single purchase row and return to the main page."""
@@ -106,6 +108,7 @@ def delete_purchase(purchase_id):
     conn.close()
     return redirect(url_for("index"))
 
+
 @app.post("/clear")
 def clear_purchases():
     """Delete all rows from the purchases table and return to the main page."""
@@ -115,6 +118,7 @@ def clear_purchases():
     conn.commit()
     conn.close()
     return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
