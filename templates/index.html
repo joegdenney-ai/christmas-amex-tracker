@@ -342,6 +342,7 @@
                         <th>What</th>
                         <th>Who</th>
                         <th>£</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -359,6 +360,13 @@
                             {% endif %}
                         </td>
                         <td>£{{ '%.2f' % p.amount }}</td>
+                        <td>
+                            <form method="POST" action="/delete/{{ p.id }}" style="margin:0; text-align:center;">
+                                <button type="submit" style="padding:2px 6px; font-size:0.75rem; border-radius:999px; border:none; background:#ffe0ec; color:#b03566; box-shadow:none; cursor:pointer;">
+                                    ✖
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
