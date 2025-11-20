@@ -95,6 +95,16 @@ def index():
         kath_owes=kath_owes
     )
 
+@app.post("/clear")
+def clear_purchases():
+    """Delete all rows from the purchases table and return to the main page."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM purchases")
+    conn.commit()
+    conn.close()
+    return redirect(url_for("index"))
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5001))
     app.run(debug=True, host="0.0.0.0", port=port)

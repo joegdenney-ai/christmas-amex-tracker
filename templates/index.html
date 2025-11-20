@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Joe & Kath Amex Christmas Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/static/xmas-icon.png">
+    <link rel="apple-touch-icon" href="/static/xmas-icon.png">
 
     <style>
         body {
@@ -209,9 +211,55 @@
             color: #b46ea4;
             padding-bottom: 12px;
         }
+
+        /* Simple falling snow effect */
+        .snow-layer {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10%;
+            font-size: 1rem;
+            color: #ffffffcc;
+            text-shadow: 0 0 4px #ff8ac6;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translate3d(0, -10%, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate3d(0, 120vh, 0);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
+        <div class="snow-layer">
+            <div class="snowflake" style="left: 5%;  animation-duration: 14s; animation-delay: 0s;">❄️</div>
+            <div class="snowflake" style="left: 20%; animation-duration: 18s; animation-delay: 2s;">✼</div>
+            <div class="snowflake" style="left: 35%; animation-duration: 16s; animation-delay: 4s;">❅</div>
+            <div class="snowflake" style="left: 50%; animation-duration: 20s; animation-delay: 1s;">❄️</div>
+            <div class="snowflake" style="left: 65%; animation-duration: 17s; animation-delay: 3s;">✻</div>
+            <div class="snowflake" style="left: 80%; animation-duration: 19s; animation-delay: 5s;">❅</div>
+            <div class="snowflake" style="left: 92%; animation-duration: 15s; animation-delay: 6s;">❄️</div>
+        </div>
     <div class="header">
         <h1>Joe &amp; Kath’s Christmas Amex Tracker</h1>
         <p>Cute, pink &amp; fair 🎀</p>
@@ -279,6 +327,12 @@
 
         <div class="card">
             <h2>All Purchases</h2>
+
+            <form method="POST" action="/clear" style="margin-bottom: 8px; text-align: right;">
+                <button type="submit" style="padding:6px 10px; font-size:0.75rem; border-radius:999px; border:none; background:#ffd1e9; color:#b03566; box-shadow:none;">
+                    Clear all 🎀
+                </button>
+            </form>
 
             {% if purchases %}
             <table>
