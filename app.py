@@ -84,12 +84,21 @@ def index():
         except ValueError:
             return redirect(url_for("index"))
 
+        db_url = os.environ.get("DATABASE_URL")
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO purchases (date, description, amount, who) VALUES (?, ?, ?, ?)",
-            (datetime.now().strftime("%Y-%m-%d"), description, amount, who),
-        )
+        if db_url:
+            # Postgres uses %s placeholders
+            cur.execute(
+                "INSERT INTO purchases (date, description, amount, who) VALUES (%s, %s, %s, %s)",
+                (datetime.now().strftime("%Y-%m-%d"), description, amount, who),
+            )
+        else:
+            # SQLite uses ? placeholders
+            cur.execute(
+                "INSERT INTO purchases (date, description, amount, who) VALUES (?, ?, ?, ?)",
+                (datetime.now().strftime("%Y-%m-%d"), description, amount, who),
+            )
         conn.commit()
         conn.close()
 
@@ -119,27 +128,25 @@ def index():
     joe_owes = joe_independent + joint_total / 2
     kath_owes = kath_independent + joint_total / 2
 
-    # Calculate an optional warning message if the free database tier is near expiry
+    # Calculate a warning message with a live countdown until the free database tier expiry
     today = date.today()
     days_left = (EXPIRY_DATE - today).days
-    expiry_warning = None
-    if days_left <= 7:
-        if days_left > 0:
-            expiry_warning = (
-                f"Heads up: the free database tier expires in {days_left} day"
-                f"{'s' if days_left != 1 else ''} on 28 December. "
-                "Consider upgrading or exporting your data so you don't lose access."
-            )
-        elif days_left == 0:
-            expiry_warning = (
-                "Heads up: the free database tier expires today (28 December). "
-                "After today you may lose access unless you upgrade or export your data."
-            )
-        else:
-            expiry_warning = (
-                "Heads up: the free database tier expiry date (28 December) has passed. "
-                "If the database becomes paused, you may need to upgrade or export your data."
-            )
+    if days_left > 0:
+        expiry_warning = (
+            f"Heads up: the free database tier expires in {days_left} day"
+            f"{'s' if days_left != 1 else ''} on 28 December 2025. "
+            "Consider upgrading or exporting your data so you don't lose access."
+        )
+    elif days_left == 0:
+        expiry_warning = (
+            "Heads up: the free database tier expires today (28 December 2025). "
+            "After today you may lose access unless you upgrade or export your data."
+        )
+    else:
+        expiry_warning = (
+            "Heads up: the free database tier expiry date (28 December 2025) has passed. "
+            "If the database becomes paused, you may need to upgrade or export your data."
+        )
 
     return render_template(
         "index.html",
@@ -156,9 +163,13 @@ def index():
 @app.post("/delete/<int:purchase_id>")
 def delete_purchase(purchase_id):
     """Delete a single purchase row and return to the main page."""
+    db_url = os.environ.get("DATABASE_URL")
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
+    if db_url:
+        cur.execute("DELETE FROM purchases WHERE id = %s", (purchase_id,))
+    else:
+        cur.execute("DELETE FROM purchases WHERE id = ?", (purchase_id,))
     conn.commit()
     conn.close()
     return redirect(url_for("index"))
