@@ -1,33 +1,65 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime
+from datetime import datetime, date
 import sqlite3
 import os
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
 
 DB_PATH = "purchases.db"
+EXPIRY_DATE = date(2025, 12, 28)
 
 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """
+    Return a database connection.
+    - If DATABASE_URL is set (e.g. on Render), use PostgreSQL.
+    - Otherwise, use local SQLite so development still works.
+    """
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url:
+        # Postgres connection with dict-style rows
+        conn = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor)
+        return conn
+    else:
+        # Local SQLite for development
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 
 def init_db():
+    """Create the purchases table in whichever database we're using."""
+    db_url = os.environ.get("DATABASE_URL")
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS purchases (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            description TEXT NOT NULL,
-            amount REAL NOT NULL,
-            who TEXT NOT NULL
+    if db_url:
+        # Postgres: use SERIAL for auto-incrementing id
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS purchases (
+                id SERIAL PRIMARY KEY,
+                date TEXT NOT NULL,
+                description TEXT NOT NULL,
+                amount REAL NOT NULL,
+                who TEXT NOT NULL
+            )
+            """
         )
-        """
-    )
+    else:
+        # SQLite: use INTEGER PRIMARY KEY AUTOINCREMENT
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS purchases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                description TEXT NOT NULL,
+                amount REAL NOT NULL,
+                who TEXT NOT NULL
+            )
+            """
+        )
     conn.commit()
     conn.close()
 
@@ -87,6 +119,28 @@ def index():
     joe_owes = joe_independent + joint_total / 2
     kath_owes = kath_independent + joint_total / 2
 
+    # Calculate an optional warning message if the free database tier is near expiry
+    today = date.today()
+    days_left = (EXPIRY_DATE - today).days
+    expiry_warning = None
+    if days_left <= 7:
+        if days_left > 0:
+            expiry_warning = (
+                f"Heads up: the free database tier expires in {days_left} day"
+                f"{'s' if days_left != 1 else ''} on 28 December. "
+                "Consider upgrading or exporting your data so you don't lose access."
+            )
+        elif days_left == 0:
+            expiry_warning = (
+                "Heads up: the free database tier expires today (28 December). "
+                "After today you may lose access unless you upgrade or export your data."
+            )
+        else:
+            expiry_warning = (
+                "Heads up: the free database tier expiry date (28 December) has passed. "
+                "If the database becomes paused, you may need to upgrade or export your data."
+            )
+
     return render_template(
         "index.html",
         purchases=purchases,
@@ -94,7 +148,8 @@ def index():
         kath_independent=kath_independent,
         joint_total=joint_total,
         joe_owes=joe_owes,
-        kath_owes=kath_owes
+        kath_owes=kath_owes,
+        expiry_warning=expiry_warning,
     )
 
 
