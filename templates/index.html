@@ -1,35 +1,394 @@
-from datetime import datetime, date
-DB_PATH = "purchases.db"
-EXPIRY_DATE = date(2025, 12, 28)
-    joe_owes = joe_independent + joint_total / 2
-    kath_owes = kath_independent + joint_total / 2
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Joe & Kath Amex Christmas Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/static/xmas-icon.png">
+    <link rel="apple-touch-icon" href="/static/xmas-icon.png">
 
-    # Show a live countdown / warning until the cloud database expiry date
-    today = date.today()
-    days_left = (EXPIRY_DATE - today).days
-    if days_left > 0:
-        expiry_warning = (
-            f"Cloud database expires in {days_left} day"
-            f"{'s' if days_left != 1 else ''} on 28 December 2025. "
-            "After that, you may lose access unless you upgrade or export your data."
-        )
-    elif days_left == 0:
-        expiry_warning = (
-            "Cloud database expires today (28 December 2025). "
-            "After today, you may lose access unless you upgrade or export your data."
-        )
-    else:
-        expiry_warning = (
-            "Cloud database expiry date (28 December 2025) has passed. "
-            "If the database becomes paused, you may need to upgrade or export your data."
-        )
-  return render_template(
-        "index.html",
-        purchases=purchases,
-        joe_independent=joe_independent,
-        kath_independent=kath_independent,
-        joint_total=joint_total,
-        joe_owes=joe_owes,
-        kath_owes=kath_owes,
-        expiry_warning=expiry_warning,
-    )
+    <style>
+        body {
+            font-family: "Helvetica", "Arial", sans-serif;
+            background: linear-gradient(#ffd6eb, #fff2fa);
+            color: #5a3a5a;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 10px 10px;
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            margin: 0;
+            color: #ff4d9b;
+            text-shadow: 2px 2px #ffe3ef;
+            font-weight: bold;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+            color: #b83e78;
+        }
+
+        .hello-kitty-banner {
+            margin: 10px auto;
+            width: 90%;
+            max-width: 420px;
+            padding: 8px;
+            border-radius: 20px;
+            border: 3px dashed #ff8ac6;
+            background: repeating-linear-gradient(
+                45deg,
+                #ffe5f3,
+                #ffe5f3 10px,
+                #ffd1e9 10px,
+                #ffd1e9 20px
+            );
+            position: relative;
+        }
+
+        .hello-kitty-banner::before {
+            content: "🎄🎀";
+            position: absolute;
+            top: -12px;
+            left: 12px;
+            font-size: 1.2rem;
+        }
+
+        .hello-kitty-banner::after {
+            content: "🎁✨";
+            position: absolute;
+            bottom: -12px;
+            right: 12px;
+            font-size: 1.2rem;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto 40px;
+            padding: 0 10px 20px;
+        }
+
+        .card {
+            background: #ffffffee;
+            border-radius: 18px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 2px solid #ffb9dd;
+            box-shadow: 0 4px 12px rgba(255, 120, 170, 0.15);
+        }
+
+        .card h2 {
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+            color: #ff4d9b;
+        }
+
+        .totals-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .totals-box {
+            flex: 1;
+            min-width: 130px;
+            background: #fff2fa;
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ffb9dd;
+        }
+
+        .totals-box h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #d13c85;
+        }
+
+        .totals-box p {
+            margin: 4px 0 0;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        label {
+            font-size: 0.85rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid #ff9aca;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            background: #fff6fb;
+        }
+
+        button {
+            padding: 12px;
+            border-radius: 50px;
+            border: none;
+            background: #ff5fa8;
+            color: white;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-top: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #d64586;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #d64586;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        th, td {
+            padding: 6px;
+            text-align: left;
+        }
+
+        th {
+            border-bottom: 2px solid #ffb9dd;
+            color: #d13c85;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #ffe8f4;
+        }
+
+        .who-tag {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .who-joe {
+            background: #e5f3ff;
+            border: 1px solid #a7cfff;
+            color: #215a9e;
+        }
+
+        .who-kath {
+            background: #ffd6ef;
+            border: 1px solid #ff9ed8;
+            color: #a0185a;
+        }
+
+        .who-joint {
+            background: #e7ffe7;
+            border: 1px solid #b4f0b4;
+            color: #256b25;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #b46ea4;
+            padding-bottom: 12px;
+        }
+
+        /* Simple falling snow effect */
+        .snow-layer {
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10%;
+            font-size: 1rem;
+            color: #ffffffcc;
+            text-shadow: 0 0 4px #ff8ac6;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translate3d(0, -10%, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate3d(0, 120vh, 0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Snow layer -->
+    <div class="snow-layer">
+        <div class="snowflake" style="left: 5%;  animation-duration: 14s; animation-delay: 0s;">❄️</div>
+        <div class="snowflake" style="left: 20%; animation-duration: 18s; animation-delay: 2s;">✼</div>
+        <div class="snowflake" style="left: 35%; animation-duration: 16s; animation-delay: 4s;">❅</div>
+        <div class="snowflake" style="left: 50%; animation-duration: 20s; animation-delay: 1s;">❄️</div>
+        <div class="snowflake" style="left: 65%; animation-duration: 17s; animation-delay: 3s;">✻</div>
+        <div class="snowflake" style="left: 80%; animation-duration: 19s; animation-delay: 5s;">❅</div>
+        <div class="snowflake" style="left: 92%; animation-duration: 15s; animation-delay: 6s;">❄️</div>
+    </div>
+
+    <div class="header">
+        <h1>Joe &amp; Kath’s Christmas Amex Tracker</h1>
+        <p>Cute, pink &amp; fair 🎀</p>
+    </div>
+
+    <div class="hello-kitty-banner">
+        <p style="margin:0; text-align:center; font-size:0.9rem;">
+            Track your festive spending together ✨
+        </p>
+    </div>
+
+    <div class="container">
+
+        {% if expiry_warning %}
+        <div class="card" style="background:#fff7f9; border-color:#ff9aca;">
+            <p style="margin:0; font-size:0.8rem; color:#c03f7a;">
+                {{ expiry_warning }}
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2>Totals</h2>
+            <div class="totals-row">
+                <div class="totals-box">
+                    <h3>Joe independent</h3>
+                    <p>£{{ '%.2f' % joe_independent }}</p>
+                </div>
+                <div class="totals-box">
+                    <h3>Kath independent</h3>
+                    <p>£{{ '%.2f' % kath_independent }}</p>
+                </div>
+            </div>
+
+            <div class="totals-row" style="margin-top:8px;">
+                <div class="totals-box">
+                    <h3>Joint total</h3>
+                    <p>£{{ '%.2f' % joint_total }}</p>
+                </div>
+            </div>
+
+            <div class="totals-row" style="margin-top:8px;">
+                <div class="totals-box">
+                    <h3>Joe owes</h3>
+                    <p>£{{ '%.2f' % joe_owes }}</p>
+                </div>
+                <div class="totals-box">
+                    <h3>Kath owes</h3>
+                    <p>£{{ '%.2f' % kath_owes }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Add a purchase 🎁</h2>
+            <form method="POST">
+                <label>Description</label>
+                <input type="text" name="description" required>
+
+                <label>Amount (GBP)</label>
+                <input type="number" step="0.01" name="amount" required>
+
+                <label>Who paid?</label>
+                <select name="who">
+                    <option value="joint">Joint 💖</option>
+                    <option value="joe">Joe 💙</option>
+                    <option value="kath">Kath 💖</option>
+                </select>
+
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>All Purchases</h2>
+
+            <form method="POST" action="/clear" style="margin-bottom: 8px; text-align: right;">
+                <button type="submit" style="padding:6px 10px; font-size:0.75rem; border-radius:999px; border:none; background:#ffd1e9; color:#b03566; box-shadow:none;">
+                    Clear all 🎀
+                </button>
+            </form>
+
+            {% if purchases %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>What</th>
+                        <th>Who</th>
+                        <th>£</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in purchases %}
+                    <tr>
+                        <td>{{ p.date }}</td>
+                        <td>{{ p.description }}</td>
+                        <td>
+                            {% if p.who == "joe" %}
+                                <span class="who-tag who-joe">Joe</span>
+                            {% elif p.who == "kath" %}
+                                <span class="who-tag who-kath">Kath</span>
+                            {% else %}
+                                <span class="who-tag who-joint">Joint</span>
+                            {% endif %}
+                        </td>
+                        <td>£{{ '%.2f' % p.amount }}</td>
+                        <td>
+                            <form method="POST" action="/delete/{{ p.id }}" style="margin:0; text-align:center;">
+                                <button type="submit" style="padding:2px 6px; font-size:0.75rem; border-radius:999px; border:none; background:#ffe0ec; color:#b03566; box-shadow:none; cursor:pointer;">
+                                    ✖
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No purchases yet 🌸</p>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            Cute &amp; fair, just like Christmas 🎀
+        </div>
+    </div>
+</body>
+</html>
