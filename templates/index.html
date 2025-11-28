@@ -273,6 +273,14 @@
 
     <div class="container">
 
+        {% if expiry_warning %}
+        <div class="card" style="background:#fff7f9; border-color:#ff9aca;">
+            <p style="margin:0; font-size:0.8rem; color:#c03f7a;">
+                {{ expiry_warning }}
+            </p>
+        </div>
+        {% endif %}
+
         <div class="card">
             <h2>Totals</h2>
             <div class="totals-row">
